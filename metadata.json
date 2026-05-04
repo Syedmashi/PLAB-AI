@@ -1,0 +1,7 @@
+{
+  "name": "PLAB AI",
+  "description": "Premium clinical simulation platform for doctors preparing for the PLAB exam using AI-driven patient interactions.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
