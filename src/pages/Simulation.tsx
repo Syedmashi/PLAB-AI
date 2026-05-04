@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -20,10 +20,17 @@ import { Message, Case } from '../types';
 import { MOCK_CASES } from '../lib/mockData';
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export default function Simulation() {
+  // Initialize Gemini lazily to avoid top-level crash if API key is missing
+  const ai = useMemo(() => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') return null;
+    try {
+      return new GoogleGenAI({ apiKey });
+    } catch {
+      return null;
+    }
+  }, []);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('caseId');
