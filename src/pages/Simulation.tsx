@@ -97,7 +97,7 @@ export default function Simulation() {
     7. Initiate the conversation by saying something like "Hey doctor! [complaint]" when you first start.`;
 
     chatRef.current = ai.chats.create({
-      model: "gemini-2.0-flash",
+      model: "gemini-flash-latest",
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.7,
@@ -354,7 +354,7 @@ export default function Simulation() {
       }`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-flash-latest",
         contents: [{ role: 'user', parts: [{ text: evaluationPrompt }] }],
         config: {
           responseMimeType: "application/json",
