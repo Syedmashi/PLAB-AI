@@ -8,10 +8,10 @@ import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Progress } from '../components/ui/progress';
-import { 
+import {
   Stethoscope, Send, User, ArrowLeft, Info, CheckCircle2, ShieldCheck,
-  XCircle, AlertCircle, Clock, Zap, TrendingUp, Mic, MicOff, Volume2, 
-  VolumeX, RefreshCw 
+  XCircle, AlertCircle, Clock, Zap, TrendingUp, Mic, MicOff, Volume2,
+  VolumeX, RefreshCw
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Message, Case } from '../types';
@@ -37,7 +37,7 @@ export default function Simulation() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [aiNotice, setAiNotice] = useState<string | null>(null);
-  
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -199,16 +199,16 @@ export default function Simulation() {
 
   const speak = useCallback((text: string) => {
     if (!speechEnabled || !window.speechSynthesis) return;
-    
+
     // Stop any current speaking
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
-    
+
     // Attempt to find a high-quality "natural" voice
-    const preferredVoices = voicesRef.current.filter(v => 
-      v.name.includes('Google') || 
-      v.name.includes('Natural') || 
+    const preferredVoices = voicesRef.current.filter(v =>
+      v.name.includes('Google') ||
+      v.name.includes('Natural') ||
       v.name.includes('Premium') ||
       v.lang.startsWith('en-GB') || // Better for PLAB (UK exam)
       v.lang.startsWith('en-US')
@@ -223,7 +223,7 @@ export default function Simulation() {
 
     if (preferredVoices.length > 0) {
       // Pick based on gender if possible, otherwise first quality one
-      const genderMatch = preferredVoices.find(v => 
+      const genderMatch = preferredVoices.find(v =>
         currentCase.patientGender === 'Female' ? v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Google UK English Female') : v.name.includes('Male') || v.name.includes('David')
       );
       utterance.voice = genderMatch || preferredVoices[0];
@@ -231,7 +231,7 @@ export default function Simulation() {
 
     utterance.rate = 0.95; // Slightly slower for clarity and naturalness
     utterance.pitch = 1.0;
-    
+
     utterance.onstart = () => {
       setIsSpeaking(true);
       stopRecording(); // Don't listen while speaking
@@ -242,7 +242,7 @@ export default function Simulation() {
       startRecording();
     };
     utterance.onerror = () => setIsSpeaking(false);
-    
+
     synthesisRef.current = utterance;
     window.speechSynthesis.speak(utterance);
   }, [speechEnabled, startRecording, stopRecording]);
@@ -298,7 +298,7 @@ export default function Simulation() {
     setMessages(prev => [...prev, newMessage]);
     setInputValue('');
     setIsTyping(true);
-    
+
     // Placeholder for the patient's incoming message
     const patientMsgId = (Date.now() + 1).toString();
     const patientResponse: Message = {
@@ -307,12 +307,12 @@ export default function Simulation() {
       content: '',
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, patientResponse]);
 
     try {
       const fullText = await requestPatientReply(content);
-      setMessages(prev => prev.map(m => 
+      setMessages(prev => prev.map(m =>
         m.id === patientMsgId ? { ...m, content: fullText } : m
       ));
       speak(fullText);
@@ -320,7 +320,7 @@ export default function Simulation() {
       console.error("AI Error:", error);
       setAiNotice('AI patient service is unavailable, so this session is using local fallback responses.');
       const fallback = getFallbackPatientReply(content);
-      setMessages(prev => prev.map(m => 
+      setMessages(prev => prev.map(m =>
         m.id === patientMsgId ? { ...m, content: fallback } : m
       ));
     } finally {
@@ -403,7 +403,7 @@ export default function Simulation() {
   if (showFeedback && evaluation) {
     return (
       <div className="min-h-dvh bg-[#020617] p-8 flex items-center justify-center overflow-y-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-4xl w-full py-8"
@@ -423,7 +423,7 @@ export default function Simulation() {
                 </p>
               </div>
             </div>
-            
+
             <CardContent className="p-10">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 <div className="text-center p-6 rounded-2xl bg-white/5 border border-white/5">
@@ -542,17 +542,17 @@ export default function Simulation() {
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">In Consultation with {currentCase.patientName}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setSpeechEnabled(!speechEnabled)}
             className={`${speechEnabled ? 'text-blue-400' : 'text-slate-500'} hover:bg-white/5`}
           >
             {speechEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </Button>
-          <Button 
+          <Button
             onClick={() => setShowDiagnosisModal(true)}
             className="gradient-bg hover:opacity-90 text-white h-10 px-6 shadow-lg shadow-blue-500/20 border-none font-bold text-sm"
           >
@@ -563,7 +563,7 @@ export default function Simulation() {
 
       <div className="flex-1 flex overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_55%)] opacity-10 pointer-events-none" />
-        
+
         {/* Chat Area */}
         <div className="flex-1 flex flex-col relative z-10 min-w-0">
           {aiNotice && (
@@ -581,17 +581,15 @@ export default function Simulation() {
                   className={`flex ${m.role === 'doctor' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[85%] sm:max-w-[80%] flex gap-4 ${m.role === 'doctor' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center border border-white/10 shadow-lg ${
-                      m.role === 'doctor' ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-white/5'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center border border-white/10 shadow-lg ${m.role === 'doctor' ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-white/5'
+                      }`}>
                       {m.role === 'doctor' ? <User className="w-5 h-5 text-white" /> : <Stethoscope className="w-5 h-5 text-slate-400" />}
                     </div>
                     <div className={`space-y-1 ${m.role === 'doctor' ? 'text-right' : 'text-left'}`}>
-                      <div className={`p-4 sm:p-5 rounded-[1.5rem] shadow-xl ${
-                        m.role === 'doctor' 
-                          ? 'bg-blue-600 text-white rounded-tr-none border-blue-500' 
+                      <div className={`p-4 sm:p-5 rounded-[1.5rem] shadow-xl ${m.role === 'doctor'
+                          ? 'bg-blue-600 text-white rounded-tr-none border-blue-500'
                           : 'glass text-slate-200 rounded-tl-none border-white/10'
-                      }`}>
+                        }`}>
                         <p className="text-sm leading-relaxed">{m.content}</p>
                       </div>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">
@@ -601,7 +599,7 @@ export default function Simulation() {
                   </div>
                 </motion.div>
               ))}
-              
+
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="glass p-4 rounded-2xl border border-white/10 flex gap-1.5 shadow-lg">
@@ -624,13 +622,12 @@ export default function Simulation() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder={isRecording ? "Listening... Speak now doctor." : "Ask the patient a question..."}
-                    className={`h-16 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:ring-blue-500 rounded-2xl pr-16 shadow-inner transition-all ${
-                      isRecording ? 'border-blue-500/50 ring-1 ring-blue-500/20' : ''
-                    }`}
+                    className={`h-16 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:ring-blue-500 rounded-2xl pr-16 shadow-inner transition-all ${isRecording ? 'border-blue-500/50 ring-1 ring-blue-500/20' : ''
+                      }`}
                   />
-                  <Button 
+                  <Button
                     type="submit"
-                    size="icon" 
+                    size="icon"
                     className="absolute right-2 top-2 h-12 w-12 gradient-bg text-white rounded-xl shadow-lg border-none hover:scale-105 active:scale-95 transition-all"
                     disabled={!inputValue.trim() || isRecording}
                   >
@@ -639,7 +636,7 @@ export default function Simulation() {
                 </form>
               </div>
             </div>
-            
+
             <div className="flex justify-center items-center gap-4 mt-6">
               <div className="flex gap-1">
                 <div className={`w-1 h-3 rounded-full transition-all duration-300 ${isSpeaking ? 'bg-blue-400 animate-bounce' : 'bg-white/10'}`} />
@@ -670,16 +667,15 @@ export default function Simulation() {
             <div className="text-center">
               <h3 className="text-xl font-bold text-white tracking-tight">{currentCase.patientName}</h3>
               <p className="text-sm text-slate-400">{currentCase.patientAge} years • {currentCase.patientGender}</p>
-              <Badge className={`mt-4 px-3 py-1 ${
-                currentCase.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                currentCase.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                'bg-rose-500/10 text-rose-400 border-rose-500/20'
-              }`}>
+              <Badge className={`mt-4 px-3 py-1 ${currentCase.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  currentCase.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                }`}>
                 {currentCase.difficulty} Level
               </Badge>
             </div>
           </div>
-          
+
           <ScrollArea className="flex-1 p-8">
             <div className="space-y-10">
               <div>
@@ -732,7 +728,7 @@ export default function Simulation() {
           <div className="p-8 space-y-6">
             <div className="space-y-3">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Consultation Outcome</label>
-              <textarea 
+              <textarea
                 value={diagnosisInput}
                 onChange={(e) => setDiagnosisInput(e.target.value)}
                 placeholder="What is your diagnosis and management plan?"
@@ -743,7 +739,7 @@ export default function Simulation() {
               <Button variant="outline" onClick={() => setShowDiagnosisModal(false)} className="flex-1 h-12 border-white/10 text-white hover:bg-white/5">
                 Keep Investigating
               </Button>
-              <Button 
+              <Button
                 onClick={handleSubmitDiagnosis}
                 className="flex-1 h-12 gradient-bg text-white border-none font-bold shadow-xl shadow-blue-500/20"
                 disabled={!diagnosisInput.trim()}
