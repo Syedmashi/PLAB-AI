@@ -1,40 +1,29 @@
 import * as React from 'react';
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
-import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Progress } from '../components/ui/progress';
 import { 
-  Stethoscope, Send, User, ArrowLeft, Info, CheckCircle2, 
+  Stethoscope, Send, User, ArrowLeft, Info, CheckCircle2, ShieldCheck,
   XCircle, AlertCircle, Clock, Zap, TrendingUp, Mic, MicOff, Volume2, 
   VolumeX, RefreshCw 
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Message, Case } from '../types';
 import { MOCK_CASES } from '../lib/mockData';
-import { GoogleGenAI } from "@google/genai";
+import { recordSession } from '../lib/progress';
 
 export default function Simulation() {
-  // Initialize Gemini lazily to avoid top-level crash if API key is missing
-  const ai = useMemo(() => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'your_gemini_api_key_here') return null;
-    try {
-      return new GoogleGenAI({ apiKey });
-    } catch {
-      return null;
-    }
-  }, []);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('caseId');
-  const currentCase = MOCK_CASES.find(c => c.id === caseId) || MOCK_CASES[0];
+  const selectedCase = MOCK_CASES.find(c => c.id === caseId);
+  const currentCase = selectedCase || MOCK_CASES[0];
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -47,13 +36,14 @@ export default function Simulation() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [aiNotice, setAiNotice] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const chatRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const sessionStartedAtRef = useRef(Date.now());
 
   // Load voices when they change
   useEffect(() => {
@@ -76,68 +66,70 @@ export default function Simulation() {
   useEffect(() => { sessionStartedRef.current = sessionStarted; }, [sessionStarted]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
-  // Initialize Chat Session
-  useEffect(() => {
-    if (!ai) return;
+  const getFallbackPatientReply = useCallback((input?: string) => {
+    const lower = (input || '').toLowerCase();
+    if (!input) return `Hey doctor... I’m ${currentCase.patientName}. ${currentCase.complaint}. I’m quite worried about it.`;
+    if (lower.includes('pain') || lower.includes('symptom') || lower.includes('tell me')) return currentCase.background.split('.')[0] + '.';
+    if (lower.includes('worr') || lower.includes('concern')) return 'I’m worried this could be something serious, and I’d like to know what I should do next.';
+    if (lower.includes('expect')) return 'I was hoping you could explain what might be causing this and whether I need urgent help.';
+    return 'I see, doctor. Could you explain that a bit more simply for me?';
+  }, [currentCase]);
 
-    const systemPrompt = `You are roleplaying a patient for a PLAB medical exam simulation. 
-    Patient Name: ${currentCase.patientName}
-    Age: ${currentCase.patientAge}
-    Gender: ${currentCase.patientGender}
-    Background: ${currentCase.background}
-    Diagnosis (SECRET - DO NOT REVEAL): ${currentCase.diagnosis}
+  const getFallbackEvaluation = useCallback(() => {
+    const transcript = messages.map((m) => m.content.toLowerCase()).join(' ');
+    const diagnosis = diagnosisInput.toLowerCase();
 
-    Rules:
-    1. Stay in character. Respond briefly and realistically like a worried patient.
-    2. Use simple language, not medical jargon.
-    3. Use natural conversational patterns: use ellipses for pauses, occasional fillers like "um" or "well", and express emotion (worry, pain, relief).
-    4. Do NOT reveal your diagnosis. Let the doctor investigate.
-    5. If asked about symptoms not in your background, improvise realistically based on the diagnosis: ${currentCase.diagnosis}.
-    6. Do not talk about being an AI.
-    7. Initiate the conversation by saying something like "Hey doctor! [complaint]" when you first start.`;
+    const matchedQuestions = (currentCase.keyQuestions || []).filter((question) => {
+      const keywords = question.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 5);
+      return keywords.some((word) => transcript.includes(word));
+    });
+    const matchedSafety = (currentCase.redFlags || []).filter((point) => {
+      const keywords = point.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 5);
+      return keywords.some((word) => transcript.includes(word) || diagnosis.includes(word));
+    });
+    const diagnosisWords = currentCase.diagnosis.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 4);
+    const diagnosisMatched = diagnosisWords.some((word) => diagnosis.includes(word));
 
-    chatRef.current = ai.chats.create({
-      model: "gemini-flash-latest",
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.7,
-      }
+    return {
+      isCorrect: diagnosisMatched,
+      accuracy: diagnosisMatched ? 70 : 40,
+      communication: Math.min(85, 45 + messages.filter((m) => m.role === 'doctor').length * 5),
+      safety: Math.min(90, 40 + matchedSafety.length * 15),
+      time: 'Not measured',
+      strengths: [
+        'Completed the consultation and submitted a working diagnosis.',
+        matchedQuestions.length > 0 ? 'Covered some relevant case-specific questions.' : 'Maintained a basic consultation flow.',
+        matchedSafety.length > 0 ? 'Addressed at least one safety-relevant feature.' : 'Reached the feedback stage for review.',
+      ],
+      improvements: [
+        'AI evaluation was unavailable, so this is a local fallback score rather than full examiner feedback.',
+        ...(currentCase.keyQuestions || []).filter((question) => !matchedQuestions.includes(question)).slice(0, 2),
+        ...(currentCase.expectedActions || []).slice(0, 1),
+      ].slice(0, 4),
+      missedQuestions: (currentCase.keyQuestions || []).filter((question) => !matchedQuestions.includes(question)).slice(0, 4),
+      missedSafetyPoints: (currentCase.redFlags || []).filter((point) => !matchedSafety.includes(point)).slice(0, 4),
+      criticalMistake: diagnosisMatched ? null : `The submitted diagnosis did not clearly match: ${currentCase.diagnosis}`,
+    };
+  }, [currentCase, diagnosisInput, messages]);
+
+  const requestPatientReply = useCallback(async (input?: string) => {
+    const response = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'patient',
+        caseData: currentCase,
+        messages: messagesRef.current,
+        input,
+      }),
     });
 
-    // Start proactive greeting
-    const startGreeting = async () => {
-      setIsTyping(true);
-      try {
-        const result = await chatRef.current.sendMessageStream({ message: "Start the simulation. Greet the doctor with 'Hey doctor!' and explain your main worry briefly." });
-        
-        const greetingId = 'greeting-initial';
-        const initialGreeting: Message = {
-          id: greetingId,
-          role: 'patient',
-          content: '',
-          timestamp: new Date()
-        };
-        setMessages([initialGreeting]);
+    if (!response.ok) {
+      throw new Error(`AI patient request failed (${response.status})`);
+    }
 
-        let fullText = '';
-        for await (const chunk of result) {
-          const chunkText = chunk.text || "";
-          fullText += chunkText;
-          setMessages(prev => prev.map(m => 
-            m.id === greetingId ? { ...m, content: fullText } : m
-          ));
-        }
-
-        speak(fullText);
-        setSessionStarted(true);
-      } catch (err) {
-        console.error("Greeting error:", err);
-      } finally {
-        setIsTyping(false);
-      }
-    };
-
-    startGreeting();
+    const data = await response.json();
+    return data.text || '';
   }, [currentCase]);
 
   // Initialize Speech Recognition
@@ -255,6 +247,38 @@ export default function Simulation() {
     window.speechSynthesis.speak(utterance);
   }, [speechEnabled, startRecording, stopRecording]);
 
+  // Initialize patient greeting
+  useEffect(() => {
+    let cancelled = false;
+
+    const startGreeting = async () => {
+      setIsTyping(true);
+      const greetingId = 'greeting-initial';
+      setMessages([{ id: greetingId, role: 'patient', content: '', timestamp: new Date() }]);
+
+      try {
+        const fullText = await requestPatientReply();
+        if (cancelled) return;
+        setMessages(prev => prev.map(m => m.id === greetingId ? { ...m, content: fullText } : m));
+        speak(fullText);
+        setSessionStarted(true);
+      } catch (err) {
+        console.error('Greeting error:', err);
+        setAiNotice('AI patient service is unavailable, so this session is using local fallback responses.');
+        const fallback = getFallbackPatientReply();
+        if (cancelled) return;
+        setMessages(prev => prev.map(m => m.id === greetingId ? { ...m, content: fallback } : m));
+        setSessionStarted(true);
+      } finally {
+        if (!cancelled) setIsTyping(false);
+      }
+    };
+
+    startGreeting();
+    return () => { cancelled = true; };
+  }, [currentCase, getFallbackPatientReply, requestPatientReply, speak]);
+
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -262,7 +286,7 @@ export default function Simulation() {
   }, [messages, isTyping]);
 
   const sendMessage = async (content: string) => {
-    if (!content.trim() || !chatRef.current) return;
+    if (!content.trim()) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -287,23 +311,18 @@ export default function Simulation() {
     setMessages(prev => [...prev, patientResponse]);
 
     try {
-      const result = await chatRef.current.sendMessageStream({ message: content });
-      let fullText = '';
-      
-      for await (const chunk of result) {
-        const chunkText = chunk.text || "";
-        fullText += chunkText;
-        
-        setMessages(prev => prev.map(m => 
-          m.id === patientMsgId ? { ...m, content: fullText } : m
-        ));
-      }
-      
+      const fullText = await requestPatientReply(content);
+      setMessages(prev => prev.map(m => 
+        m.id === patientMsgId ? { ...m, content: fullText } : m
+      ));
       speak(fullText);
     } catch (error) {
       console.error("AI Error:", error);
-      // Remove the empty message if there's an error
-      setMessages(prev => prev.filter(m => m.id !== patientMsgId));
+      setAiNotice('AI patient service is unavailable, so this session is using local fallback responses.');
+      const fallback = getFallbackPatientReply(content);
+      setMessages(prev => prev.map(m => 
+        m.id === patientMsgId ? { ...m, content: fallback } : m
+      ));
     } finally {
       setIsTyping(false);
     }
@@ -324,52 +343,62 @@ export default function Simulation() {
     setSessionStarted(false); // Prevents the auto-restart loop in onend
 
     try {
-      const chatHistory = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
-      const evaluationPrompt = `As a Senior Medical Evaluator for the PLAB exam, assess this consultation.
-      
-      Scenario: ${currentCase.title}
-      Actual Diagnosis: ${currentCase.diagnosis}
-      Doctor's Diagnosis: ${diagnosisInput}
-      
-      Consultation Transcript:
-      ${chatHistory}
-      
-      Task:
-      1. Determine if the doctor's diagnosis is correct.
-      2. Rate Accuracy, Communication, and Patient Safety (0-100%).
-      3. Provide 3 specific strengths.
-      4. Provide 3 specific areas for improvement, especially highlighting where the doctor might have missed a key sign or misinterpreted something.
-      5. State clearly at what point they got it wrong if the diagnosis is incorrect.
-      
-      Return the evaluation in JSON format with these exact keys:
-      {
-        "isCorrect": boolean,
-        "accuracy": number,
-        "communication": number,
-        "safety": number,
-        "time": string,
-        "strengths": string[],
-        "improvements": string[],
-        "criticalMistake": string | null
-      }`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
-        contents: [{ role: 'user', parts: [{ text: evaluationPrompt }] }],
-        config: {
-          responseMimeType: "application/json",
-        }
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'evaluate',
+          caseData: currentCase,
+          messages,
+          diagnosisInput,
+        }),
       });
 
-      const result = JSON.parse(response.text || "{}");
+      if (!response.ok) throw new Error(`Evaluation request failed (${response.status})`);
+      const result = await response.json();
       setEvaluation(result);
+      recordSession({
+        caseId: currentCase.id,
+        caseTitle: currentCase.title,
+        durationMs: Date.now() - sessionStartedAtRef.current,
+        diagnosisInput,
+        evaluation: result,
+      });
       setShowFeedback(true);
     } catch (error) {
       console.error("Evaluation Error:", error);
+      setAiNotice('AI examiner service is unavailable, so this score was generated by the local fallback evaluator.');
+      const fallback = getFallbackEvaluation();
+      setEvaluation(fallback);
+      recordSession({
+        caseId: currentCase.id,
+        caseTitle: currentCase.title,
+        durationMs: Date.now() - sessionStartedAtRef.current,
+        diagnosisInput,
+        evaluation: fallback,
+      });
+      setShowFeedback(true);
     } finally {
       setIsTyping(false);
     }
   };
+
+  if (caseId && !selectedCase) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-8">
+        <Card className="glass border-white/10 shadow-2xl max-w-lg w-full">
+          <CardContent className="p-10 text-center">
+            <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-5" />
+            <h1 className="text-2xl font-bold text-white mb-3">Case not found</h1>
+            <p className="text-slate-400 mb-8">The selected simulation link does not match an available case.</p>
+            <Button onClick={() => navigate('/cases')} className="gradient-bg text-white border-none font-bold">
+              Choose a Case
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (showFeedback && evaluation) {
     return (
@@ -381,7 +410,7 @@ export default function Simulation() {
         >
           <Card className="glass border-white/10 shadow-2xl overflow-hidden">
             <div className={`p-12 text-center relative ${evaluation.isCorrect ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-rose-600 to-orange-600'}`}>
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_55%)] opacity-20 mix-blend-overlay" />
               <div className="relative z-10 text-white">
                 <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto mb-6 border border-white/30 shadow-2xl">
                   {evaluation.isCorrect ? <CheckCircle2 className="w-12 h-12" /> : <XCircle className="w-12 h-12" />}
@@ -450,6 +479,40 @@ export default function Simulation() {
                 </div>
               </div>
 
+              {((evaluation.missedQuestions?.length || 0) > 0 || (evaluation.missedSafetyPoints?.length || 0) > 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-10">
+                  {(evaluation.missedQuestions?.length || 0) > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Info className="w-5 h-5 text-amber-400" /> Missed Questions
+                      </h3>
+                      <ul className="space-y-3">
+                        {evaluation.missedQuestions.map((item: string, i: number) => (
+                          <li key={i} className="flex items-center gap-3 text-slate-300 bg-white/5 p-3 rounded-xl border border-white/5">
+                            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" /> {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(evaluation.missedSafetyPoints?.length || 0) > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-rose-400" /> Missed Safety Points
+                      </h3>
+                      <ul className="space-y-3">
+                        {evaluation.missedSafetyPoints.map((item: string, i: number) => (
+                          <li key={i} className="flex items-center gap-3 text-slate-300 bg-white/5 p-3 rounded-xl border border-white/5">
+                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" /> {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
                 <Button onClick={() => navigate('/dashboard')} variant="outline" className="h-12 px-8 border-white/10 text-white hover:bg-white/5">
                   Back to Dashboard
@@ -499,10 +562,15 @@ export default function Simulation() {
       </header>
 
       <div className="flex-1 flex overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_55%)] opacity-10 pointer-events-none" />
         
         {/* Chat Area */}
         <div className="flex-1 flex flex-col relative z-10 min-w-0">
+          {aiNotice && (
+            <div className="mx-6 mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {aiNotice}
+            </div>
+          )}
           <ScrollArea className="flex-1 p-6" ref={scrollRef}>
             <div className="max-w-3xl mx-auto space-y-8 pb-8">
               {messages.map((m) => (
@@ -593,13 +661,10 @@ export default function Simulation() {
         {/* Info Sidebar (Desktop) */}
         <aside className="w-80 bg-white/5 border-l border-white/5 hidden xl:flex flex-col backdrop-blur-xl z-20 shrink-0">
           <div className="p-8 border-b border-white/5">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl mx-auto mb-6 flex items-center justify-center border border-white/10 shadow-2xl relative overflow-hidden group">
-              <img 
-                src={`https://picsum.photos/seed/${currentCase.patientName}/200/200`} 
-                alt="Patient" 
-                className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-3xl mx-auto mb-6 flex items-center justify-center border border-white/10 shadow-2xl relative overflow-hidden group">
+              <span className="text-3xl font-black text-white/80">
+                {currentCase.patientName.split(' ').map((part) => part[0]).join('').slice(0, 2)}
+              </span>
               <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="text-center">
@@ -658,7 +723,7 @@ export default function Simulation() {
       <Dialog open={showDiagnosisModal} onOpenChange={setShowDiagnosisModal}>
         <DialogContent className="glass border-white/10 sm:max-w-[500px] p-0 overflow-hidden shadow-2xl">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center relative">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_55%)] opacity-20 mix-blend-overlay" />
             <div className="relative z-10 text-white">
               <h2 className="text-2xl font-bold mb-2">Final Diagnosis</h2>
               <p className="opacity-80 text-sm">Review your findings and provide a diagnosis.</p>

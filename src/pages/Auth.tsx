@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Stethoscope, Chrome, Mail, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signInDemo } from '../lib/auth';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,7 +14,7 @@ export default function Auth() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login
+    signInDemo();
     navigate('/dashboard');
   };
 
@@ -46,13 +47,13 @@ export default function Auth() {
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-3xl font-bold text-white">{isLogin ? 'Welcome back' : 'Create an account'}</CardTitle>
             <CardDescription className="text-slate-400">
-              {isLogin ? 'Enter your credentials to access your dashboard' : 'Join thousands of doctors preparing for PLAB'}
+              {isLogin ? 'Demo mode: enter any email and password to explore the prototype' : 'Demo mode: create a local prototype account'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-3">
-              <Button variant="outline" className="w-full h-12 font-medium border-white/10 text-white hover:bg-white/5 backdrop-blur-md">
-                <Chrome className="w-5 h-5 mr-3" /> Continue with Google
+              <Button type="button" variant="outline" disabled className="w-full h-12 font-medium border-white/10 text-white hover:bg-white/5 backdrop-blur-md disabled:opacity-60 disabled:cursor-not-allowed">
+                <Chrome className="w-5 h-5 mr-3" /> Google sign-in coming soon
               </Button>
             </div>
             
@@ -89,7 +90,7 @@ export default function Auth() {
         </Card>
         
         <p className="text-center text-xs text-slate-500 mt-10 px-8 leading-relaxed">
-          By clicking continue, you agree to our <a href="#" className="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-400 hover:underline">Privacy Policy</a>.
+          Prototype access only. Do not enter a real password until production authentication is connected.
         </p>
       </motion.div>
     </div>

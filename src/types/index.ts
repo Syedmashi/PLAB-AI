@@ -11,6 +11,10 @@ export interface Case {
   accuracy?: number;
   diagnosis: string;
   background: string;
+  patientAffect?: string;
+  keyQuestions?: string[];
+  redFlags?: string[];
+  expectedActions?: string[];
 }
 
 export interface Message {

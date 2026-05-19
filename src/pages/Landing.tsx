@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { Button } from '../components/ui/button';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
-import { CheckCircle2, MessageSquare, Zap, ShieldCheck, ArrowRight, Star } from 'lucide-react';
+import { CheckCircle2, MessageSquare, Zap, ShieldCheck, ArrowRight, Star, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Landing() {
@@ -16,7 +16,7 @@ export default function Landing() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse delay-1000" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_55%)] opacity-20 mix-blend-overlay" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
@@ -33,7 +33,7 @@ export default function Landing() {
               <span className="gradient-text">Clinical Mastery</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-400 mb-12 leading-relaxed">
-              Experience hyper-realistic AI patient simulations designed for the modern doctor. Master your clinical reasoning with precision and confidence.
+              Practise PLAB 2-style consultations with AI patient scenarios, structured history-taking, and feedback focused on clinical reasoning, communication, and safety.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link to="/auth">
@@ -41,15 +41,17 @@ export default function Landing() {
                   Start Practicing Now <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="h-16 px-10 text-lg border-white/10 text-white hover:bg-white/5 backdrop-blur-md transition-all">
-                View Demo Case
-              </Button>
+              <Link to="/simulation?caseId=acs-telephone">
+                <Button size="lg" variant="outline" className="h-16 px-10 text-lg border-white/10 text-white hover:bg-white/5 backdrop-blur-md transition-all">
+                  View Demo Case
+                </Button>
+              </Link>
             </div>
             
             <div className="mt-24 flex flex-wrap items-center justify-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-              <div className="flex items-center gap-2 font-semibold text-white"><ShieldCheck className="w-5 h-5" /> GMC Standards</div>
-              <div className="flex items-center gap-2 font-semibold text-white"><Star className="w-5 h-5" /> 4.9/5 Rating</div>
-              <div className="flex items-center gap-2 font-semibold text-white"><CheckCircle2 className="w-5 h-5" /> PLAB 2 Focused</div>
+              <div className="flex items-center gap-2 font-semibold text-white"><ShieldCheck className="w-5 h-5" /> Patient Safety Focus</div>
+              <div className="flex items-center gap-2 font-semibold text-white"><Star className="w-5 h-5" /> Prototype Build</div>
+              <div className="flex items-center gap-2 font-semibold text-white"><CheckCircle2 className="w-5 h-5" /> PLAB 2-Style Practice</div>
             </div>
           </motion.div>
         </div>
@@ -68,19 +70,19 @@ export default function Landing() {
               {
                 step: "01",
                 title: "Select Scenario",
-                desc: "Choose from a curated library of complex clinical cases across all specialties.",
+                desc: "Choose from the initial case library, including chest pain, headache, and counselling scenarios extracted from the provided PLAB material.",
                 icon: <Zap className="w-6 h-6 text-blue-400" />
               },
               {
                 step: "02",
                 title: "AI Interaction",
-                desc: "Engage with our advanced LLM-powered patients that respond with clinical nuance.",
+                desc: "Engage with LLM-powered patients that stay in role and reveal details as you ask relevant questions.",
                 icon: <MessageSquare className="w-6 h-6 text-purple-400" />
               },
               {
                 step: "03",
                 title: "Deep Analytics",
-                desc: "Receive comprehensive feedback on your diagnostic path and communication style.",
+                desc: "Receive structured feedback on diagnosis, communication, patient safety, missed questions, and missed safety points.",
                 icon: <CheckCircle2 className="w-6 h-6 text-emerald-400" />
               }
             ].map((item, idx) => (
@@ -111,9 +113,9 @@ export default function Landing() {
               <h2 className="text-4xl md:text-6xl font-bold text-white mb-10 leading-tight">Built for the <br /><span className="gradient-text">Modern Clinician</span></h2>
               <div className="space-y-10">
                 {[
-                  { title: "Hyper-Realistic AI", desc: "Our patients simulate real-world complexity, including emotional distress and subtle symptoms." },
-                  { title: "Precision Feedback", desc: "AI-driven analysis of your history-taking, rapport building, and clinical reasoning." },
-                  { title: "Adaptive Learning", desc: "The platform evolves with your performance, suggesting cases that target your weaknesses." }
+                  { title: "Role-Based AI Patients", desc: "Patients answer in simple language and avoid revealing the diagnosis unless the doctor earns it through the consultation." },
+                  { title: "Structured Feedback", desc: "AI-driven review of your history-taking, rapport building, clinical reasoning, and patient safety." },
+                  { title: "Domain-Grounded Cases", desc: "Initial cases are aligned with the provided PLAB notes, including ACS, pericarditis, carbon monoxide headache, migraine, and obesity counselling." }
                 ].map((benefit, idx) => (
                   <div key={idx} className="flex gap-6 group">
                     <div className="mt-1 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-2 h-fit shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
@@ -129,13 +131,13 @@ export default function Landing() {
             </div>
             <div className="relative group">
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-[2.5rem] opacity-20 blur-2xl group-hover:opacity-30 transition-opacity" />
-              <div className="relative glass rounded-[2.5rem] overflow-hidden border-white/10">
-                <img 
-                  src="https://picsum.photos/seed/futuristic-med/1000/1000" 
-                  alt="Medical Practice" 
-                  className="w-full object-cover aspect-square opacity-80 group-hover:scale-105 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
+              <div className="relative glass rounded-[2.5rem] overflow-hidden border-white/10 aspect-square flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.35),transparent_35%),radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.32),transparent_35%)]">
+                <div className="absolute inset-8 rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-sm" />
+                <div className="relative z-10 text-center p-10">
+                  <Stethoscope className="w-20 h-20 mx-auto mb-6 text-blue-300" />
+                  <p className="text-2xl font-bold text-white mb-3">AI Patient Practice</p>
+                  <p className="text-slate-300">Structured PLAB 2-style consultations with safety-focused feedback.</p>
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
               </div>
             </div>
@@ -143,34 +145,26 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Case Focus */}
       <section id="testimonials" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Trusted by Innovators</h2>
-            <p className="text-slate-400 text-lg">Join the elite circle of doctors mastering their craft.</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">What the prototype covers now</h2>
+            <p className="text-slate-400 text-lg">No fake testimonials — just the current clinical focus areas available in this build.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { name: "Dr. Amara Chen", role: "PLAB 2 Candidate", text: "The AI patients are incredibly realistic. It's the closest thing to the real exam I've found." },
-              { name: "Dr. James Wilson", role: "Foundation Year 1", text: "I passed my PLAB 2 on the first try thanks to the consistent practice I got here." },
-              { name: "Dr. Priya Sharma", role: "PLAB 2 Candidate", text: "The feedback section is a game changer. It pointed out exactly where my history taking was weak." }
-            ].map((t, idx) => (
+              { title: "Emergency chest pain", text: "Telephone ACS safety, immediate escalation, aspirin advice, and ambulance counselling." },
+              { title: "Headache red flags", text: "Carbon monoxide exposure, migraine pattern recognition, and safety-netting." },
+              { title: "Counselling stations", text: "Sensitive obesity counselling with ICE, shared decision-making, and holistic risk assessment." }
+            ].map((item, idx) => (
               <div key={idx} className="glass p-10 rounded-[2rem] hover:bg-white/[0.05] transition-all">
                 <div className="flex gap-1 mb-6">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-blue-400 text-blue-400" />)}
+                  {[...Array(3)].map((_, i) => <Star key={i} className="w-4 h-4 fill-blue-400 text-blue-400" />)}
                 </div>
-                <p className="text-slate-300 italic mb-8 text-lg leading-relaxed">"{t.text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white">
-                    {t.name[4]}
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">{t.name}</div>
-                    <div className="text-sm text-slate-500">{t.role}</div>
-                  </div>
-                </div>
+                <h3 className="font-bold text-white text-xl mb-4">{item.title}</h3>
+                <p className="text-slate-300 text-lg leading-relaxed">{item.text}</p>
               </div>
             ))}
           </div>
@@ -186,7 +180,7 @@ export default function Landing() {
             
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 relative z-10 leading-tight">Elevate Your <br /><span className="gradient-text">Clinical Career</span></h2>
             <p className="text-slate-400 text-xl mb-12 max-w-xl mx-auto relative z-10 leading-relaxed">
-              Join the next generation of doctors using AI to redefine medical excellence.
+              Start with the demo cases, then expand the case library and production auth when ready.
             </p>
             <Link to="/auth" className="relative z-10">
               <Button size="lg" className="h-16 px-12 text-xl gradient-bg text-white shadow-2xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 border-none font-bold">

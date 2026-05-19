@@ -1,4 +1,10 @@
-import { Stethoscope, Github, Twitter, Linkedin } from 'lucide-react';
+import { Stethoscope } from 'lucide-react';
+
+const footerSections = [
+  { title: 'Product', items: ['Features', 'Case Library', 'Pricing'] },
+  { title: 'Company', items: ['About Us', 'Careers', 'Contact'] },
+  { title: 'Legal', items: ['Privacy Policy', 'Terms of Service'] },
+];
 
 export function Footer() {
   return (
@@ -13,46 +19,33 @@ export function Footer() {
               <span className="text-lg font-bold tracking-tight text-white">PLAB<span className="gradient-text">AI</span></span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              The premium clinical simulation platform for doctors. Master your PLAB exam with realistic AI patient interactions.
+              Clinical simulation practice for PLAB 2-style consultations, with realistic AI patient interactions and feedback.
             </p>
           </div>
-          
-          <div>
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Product</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Features</a></li>
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Case Library</a></li>
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Pricing</a></li>
-            </ul>
-          </div>
 
-          <div>
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Company</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Careers</a></li>
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Contact</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Legal</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors">Terms of Service</a></li>
-            </ul>
-          </div>
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{section.title}</h4>
+              <ul className="space-y-2">
+                {section.items.map((item) => (
+                  <li key={item}>
+                    <span className="text-sm text-slate-500 cursor-not-allowed" title="Coming soon">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} PLAB AI. All rights reserved.
+            © {new Date().getFullYear()} PLAB AI. Prototype build.
           </p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-slate-500 hover:text-blue-400 transition-colors"><Twitter className="w-5 h-5" /></a>
-            <a href="#" className="text-slate-500 hover:text-blue-400 transition-colors"><Linkedin className="w-5 h-5" /></a>
-            <a href="#" className="text-slate-500 hover:text-blue-400 transition-colors"><Github className="w-5 h-5" /></a>
-          </div>
+          <p className="text-xs text-slate-600">
+            Public links and legal pages are not connected yet.
+          </p>
         </div>
       </div>
     </footer>

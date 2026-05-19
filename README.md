@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# PLAB AI
 
-# Run and deploy your AI Studio app
+Prototype PLAB 2-style clinical simulation app with AI patient roleplay and structured feedback.
 
-This contains everything you need to run your app locally.
+## Current scope
 
-View your app in AI Studio: https://ai.studio/apps/54765f21-2db8-49be-800c-d4965f93c61d
+- React/Vite frontend.
+- Vercel serverless API route at `api/gemini.ts` so the Gemini key stays server-side.
+- Initial case library grounded in the supplied PLAB materials: ACS chest pain, pericarditis, carbon monoxide headache, migraine, and obesity counselling.
+- Local demo authentication gate using browser storage. Do not use real passwords until production auth is connected.
+- Local browser progress/history storage for completed sessions.
 
-## Run Locally
+## Run locally
 
-**Prerequisites:**  Node.js
+**Prerequisite:** Node.js
 
+```bash
+npm install
+cp .env.example .env.local
+# Add your server-side GEMINI_API_KEY to .env.local
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Checks
+
+```bash
+npm run lint
+npm run build
+```
+
+## Deploy notes
+
+On Vercel, set `GEMINI_API_KEY` as an environment variable. The frontend calls `/api/gemini`; do not expose Gemini keys through Vite client env variables.
+
+Production gaps before real users:
+
+- Replace local demo auth with a real auth provider.
+- Move progress/history from browser localStorage to a user-scoped database.
+- Add clinical review for the case library and examiner rubric before marketing as exam-ready.
