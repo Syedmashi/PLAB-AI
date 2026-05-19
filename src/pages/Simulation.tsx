@@ -385,7 +385,7 @@ export default function Simulation() {
 
   if (caseId && !selectedCase) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-8">
+      <div className="min-h-dvh bg-[#020617] flex items-center justify-center p-8">
         <Card className="glass border-white/10 shadow-2xl max-w-lg w-full">
           <CardContent className="p-10 text-center">
             <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-5" />
@@ -402,7 +402,7 @@ export default function Simulation() {
 
   if (showFeedback && evaluation) {
     return (
-      <div className="min-h-screen bg-[#020617] p-8 flex items-center justify-center overflow-y-auto">
+      <div className="min-h-dvh bg-[#020617] p-8 flex items-center justify-center overflow-y-auto">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -529,7 +529,7 @@ export default function Simulation() {
   }
 
   return (
-    <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
+    <div className="h-dvh bg-[#020617] flex flex-col overflow-hidden">
       {/* Header */}
       <header className="h-16 bg-white/5 border-b border-white/5 flex items-center justify-between px-6 backdrop-blur-xl z-20 shrink-0">
         <div className="flex items-center gap-4">

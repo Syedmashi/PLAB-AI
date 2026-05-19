@@ -10,7 +10,7 @@ export default function History() {
   const sessions = getRecentSessions(100);
 
   return (
-    <div className="min-h-screen bg-[#020617] flex">
+    <div className="min-h-dvh bg-[#020617] flex">
       <aside className="w-64 bg-white/5 border-r border-white/5 hidden lg:flex flex-col fixed h-full backdrop-blur-xl">
         <div className="p-6">
           <Link to="/" className="flex items-center gap-2">

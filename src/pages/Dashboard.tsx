@@ -16,7 +16,7 @@ export default function Dashboard() {
   const recentSessions = getRecentSessions(3);
 
   return (
-    <div className="min-h-screen bg-[#020617] flex">
+    <div className="min-h-dvh bg-[#020617] flex">
       {/* Sidebar */}
       <aside className="w-64 bg-white/5 border-r border-white/5 hidden lg:flex flex-col fixed h-full backdrop-blur-xl">
         <div className="p-6">

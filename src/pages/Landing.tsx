@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[#020617] selection:bg-blue-500/30 selection:text-white overflow-x-hidden">
+    <div className="min-h-dvh bg-[#020617] selection:bg-blue-500/30 selection:text-white overflow-x-hidden">
       <Navbar />
       
       {/* Hero Section */}

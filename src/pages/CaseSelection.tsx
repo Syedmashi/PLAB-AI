@@ -26,7 +26,7 @@ export default function CaseSelection() {
   });
 
   return (
-    <div className="min-h-screen bg-[#020617] p-8 relative overflow-hidden">
+    <div className="min-h-dvh bg-[#020617] p-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] pointer-events-none" />
 
